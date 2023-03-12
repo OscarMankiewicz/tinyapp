@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 
-//makes ejs the view engine
+//Makes ejs the view engine
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -27,7 +27,14 @@ app.get("/hello", (req, res) => {
     res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//Route to urls_index template
 app.get("/urls", (req, res) => {
     const templateVars = { urls: urlDatabase };
     res.render("urls_index", templateVars);
+});
+
+//Route to urls_show template
+app.get("/urls/:id", (req, res) => {
+const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
+    res.render("urls_show", templateVars)
 });
