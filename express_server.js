@@ -60,6 +60,13 @@ const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
     res.render("urls_show", templateVars)
 });
 
+//Post request to delete a url when button is pressed
+app.post("/urls/:id/delete", (req, res) => {
+    const id = req.params.id;
+    delete urlDatabase[id];
+    res.redirect("/urls");
+});
+
 //Route to take a short url to the long url
 app.get("/u/:id", (req, res) => {
     const shortURL = req.params.id;
