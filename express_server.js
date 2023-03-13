@@ -56,7 +56,7 @@ app.get("/urls/new", (req, res) => {
 
 //Route to urls_show template
 app.get("/urls/:id", (req, res) => {
-const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
+    const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
     res.render("urls_show", templateVars)
 });
 
@@ -81,4 +81,12 @@ app.post("/urls", (req, res) => {
 
     urlDatabase[shortURL] = longURL;
     res.redirect(`/urls/${shortURL}`)
+});
+
+//Post request to send user to edit page
+app.post('/urls/:id', (req, res) => {
+    const id = req.params.id;
+    const updatedLongURL = req.body.longURL;
+    urlDatabase[id].longURL = updatedLongURL;
+    res.redirect(`/urls/${id}`);
 });
