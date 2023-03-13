@@ -104,3 +104,9 @@ app.post('/login', (req, res) => {
     res.cookie('username', username);
     res.redirect('/urls');
 })
+
+//Post request to handle user logout
+app.post('/logout', (req, res) => {
+    res.clearCookie('username');
+    res.redirect('/urls');
+})
