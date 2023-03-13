@@ -5,6 +5,10 @@ const PORT = 8080; // default port 8080
 //body-parser
 app.use(express.urlencoded({ extended: true }));
 
+//cookie-parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 //Makes ejs the view engine
 app.set("view engine", "ejs");
 
@@ -45,7 +49,10 @@ app.get("/hello", (req, res) => {
 
 //Route to urls_index template
 app.get("/urls", (req, res) => {
-    const templateVars = { urls: urlDatabase };
+    const templateVars = { 
+        urls: urlDatabase,
+        username: req.cookies[`username`]
+     };
     res.render("urls_index", templateVars);
 });
 
