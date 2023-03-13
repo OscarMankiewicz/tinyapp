@@ -60,8 +60,18 @@ const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
     res.render("urls_show", templateVars)
 });
 
-//post request for urls page
+//Route to take a short url to the long url
+app.get("/u/:id", (req, res) => {
+    const shortURL = req.params.id;
+    const longURL = urlDatabase[shortURL];
+    res.redirect(longURL);
+})
+
+//Post request for urls page
 app.post("/urls", (req, res) => {
-    console.log(req.body); // Log the POST request body to the console
-    res.send("Ok"); // Respond with 'Ok' (we will replace this)
+    const shortURL = generateRandomString();
+    const longURL = req.body.longURL;
+
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`)
 });
