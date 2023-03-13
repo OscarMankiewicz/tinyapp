@@ -90,3 +90,10 @@ app.post('/urls/:id', (req, res) => {
     urlDatabase[id].longURL = updatedLongURL;
     res.redirect(`/urls/${id}`);
 });
+
+//Post request to handle user login
+app.post('/login', (req, res) => {
+    const {username} = req.body;
+    res.cookie('username', username);
+    res.redirect('/urls');
+})
