@@ -56,19 +56,6 @@ function getUser(req) {
     return users[userId];
 }
 
-//attaches url to user
-function urlsForUser(id) {
-    const userUrls = {};
-    for (const urlId in urlDatabase) {
-      const url = urlDatabase[urlId];
-      if (url.userId === id) {
-        userUrls[urlId] = url;
-      }
-    }
-    return userUrls;
-}
-  
-
 const urlDatabase = {
     b6UTxQ: {
       longURL: "https://www.tsn.ca",
@@ -79,6 +66,18 @@ const urlDatabase = {
       userID: "aJ48lW",
     },
 };
+
+//attaches url to user
+function urlsForUser(id, urlDatabase) {
+    let usersURLs= {}
+
+    for (const shortURL in urlDatabase) {
+        if(urlDatabase[shortURL].userID === id) {
+            usersURLs[shortURL] = urlDatabase[shortURL];
+        }
+    }
+    return usersURLs;
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -98,14 +97,14 @@ app.get("/hello", (req, res) => {
 
 //Route to urls_index template
 app.get("/urls", (req, res) => {
-    const user = [req.cookies.user_id];
-    const userId = [req.cookies.user_id];
-    if (!userId) {
-      res.status(401).send("<html><body>Please log in to view your URLs</body></html>");
-      return;
-    }
-    const urls = urlsForUser(userId);
-    res.render("urls_index", { urls });
+    const user = users[req.cookies.user_id];
+    const usersURLs = urlsForUser(user, urlDatabase);
+    const templateVars = {
+        urls: usersURLs,
+        user
+    };
+
+    res.render("urls_index", templateVars);
 });
 
 // Set a cookie when a new user registers or logs in
@@ -140,25 +139,47 @@ app.get('/urls/new', (req, res) => {
 })
 
 //Route to urls_show template
-app.get("/urls/:id", (req, res) => {
-    const userId = [req.cookies.user_id];
-    if (!userId) {
-      res.status(401).send("<html><body>Please log in to view this URL</body></html>");
+app.get('/urls/:id', (req, res) => {
+    const user = getUser(req);
+    const shortURL = req.params.id;
+    const usersURLs = urlsForUser(user, urlDatabase);
+    const id = req.params.id;
+
+    if(!user || !usersURLs) {
+        res.redirect('/login')
+    }
+
+    if(!usersURLs) {
+        res.status(401).send('This is not your url')
+    }
+  
+    if (!urlDatabase[shortURL]) {
+      res.status(404).send('Short URL not found');
       return;
     }
-    const url = urlDatabase[req.params.id];
-    if (!url || url.userId !== userId) {
-      res.status(403).send("<html><body>You do not have permission to view this URL</body></html>");
-      return;
-    }
-    res.render("urls_show", { url });
-  });
+
+    const templateVars = {
+      user,
+      shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      id
+    };
+  
+    res.render('urls_show', templateVars);
+});
 
 //Post request to delete a url when button is pressed
 app.post("/urls/:id/delete", (req, res) => {
     const id = req.params.id;
-    delete urlDatabase[id];
-    res.redirect("/urls");
+    const user = users[req.cookies.user_id];
+    const shortURL = req.params.id;
+
+    if (user !== urlDatabase[shortURL].userID) {
+        res.status(401).send('You cannot do that')
+    } else {
+        delete urlDatabase[id];
+        res.redirect("/urls");
+    }
 });
 
 //Route to take a short url to the long url
@@ -209,9 +230,17 @@ app.post("/urls", (req, res) => {
 //Post request to send user to edit page
 app.post('/urls/:id', (req, res) => {
     const id = req.params.id;
-    const updatedLongURL = req.body.longURL;
-    urlDatabase[id].longURL = updatedLongURL;
-    res.redirect(`/urls/${id}`);
+    if (!urlDatabase[shortURL]) {
+        res.status(404).send('This URL does not exist')
+    }
+
+    if (user !== urlDatabase[shortURL].userID) {
+        res.status(401).send('This does not belong to you')
+    } else {
+        const updatedLongURL = req.body.longURL;
+        urlDatabase[id].longURL = updatedLongURL;
+        res.redirect(`/urls/${id}`);
+    }
 });
 
 
