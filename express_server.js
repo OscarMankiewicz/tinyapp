@@ -3,6 +3,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const bcrypt = require('bcryptjs');
 
 //body-parser
 app.use(express.urlencoded({ extended: true }));
@@ -175,7 +176,7 @@ app.post("/urls/:id/delete", (req, res) => {
     const shortURL = req.params.id;
 
     if (user !== urlDatabase[shortURL].userID) {
-        res.status(401).send('You cannot do that')
+        res.status(401).send('You cannot do that');
     } else {
         delete urlDatabase[id];
         res.redirect("/urls");
@@ -263,11 +264,14 @@ app.post('/register', (req, res) => {
         }
     }
 
+    //hashing password
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
     //Add new user obj to the users obj
     users[id] = {
         id: id,
         email: email,
-        password: password,
+        password: hashedPassword,
     }
 
     //Set a cookie for the new user's ID
