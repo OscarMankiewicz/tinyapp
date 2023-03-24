@@ -4,6 +4,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require('bcryptjs');
+const { getUserByEmail } = require('./helpers')
 
 //body-parser
 app.use(express.urlencoded({ extended: true }));
@@ -11,6 +12,14 @@ app.use(express.urlencoded({ extended: true }));
 //cookie-parser
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+
+
+//cookie session
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1', 'key2'],
+}));
 
 //Makes ejs the view engine
 app.set("view engine", "ejs");
@@ -39,20 +48,12 @@ const users = {
     
 };
 
-function getUserByEmail(email) {
-    for (const userID in users) {
-      if (users[userID].email === email) {
-        return users[userID];
-      }
-    }
-    return null;
-}
- 
 function checkPassword(password, hashedPassword) {
-    return password === hashedPassword;
+    return bcrypt.compareSync(password, hashedPassword);
 }
 
 function getUser(req) {
+    console.log("User ID from cookie:", req.session.user_id);
     const userId = req.cookies.user_id;
     return users[userId];
 }
@@ -98,7 +99,7 @@ app.get("/hello", (req, res) => {
 
 //Route to urls_index template
 app.get("/urls", (req, res) => {
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
     const usersURLs = urlsForUser(user, urlDatabase);
     const templateVars = {
         urls: usersURLs,
@@ -111,9 +112,11 @@ app.get("/urls", (req, res) => {
 // Set a cookie when a new user registers or logs in
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
-    const user = getUserByEmail(email);
+    const user = getUserByEmail(email, users);
+    console.log(user)
     if (user && checkPassword(password, user.password)) {
-      res.cookie("user_id", user.id);
+      req.session.user_id = user.id;
+      console.log(req.session.user_id);
       res.redirect("/urls");
     } else {
       res.status(403).send("Incorrect email or password");
@@ -172,7 +175,7 @@ app.get('/urls/:id', (req, res) => {
 //Post request to delete a url when button is pressed
 app.post("/urls/:id/delete", (req, res) => {
     const id = req.params.id;
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
     const shortURL = req.params.id;
 
     if (user !== urlDatabase[shortURL].userID) {
@@ -192,7 +195,7 @@ app.get("/u/:id", (req, res) => {
 
 // GET request to render the registration template
 app.get("/register", (req, res) => {
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
     if (user) {
         res.redirect('/urls')
     } else {
@@ -205,7 +208,7 @@ app.get("/register", (req, res) => {
 
 //Get request to render the login page
 app.get('/login', (req, res) => {
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
   if (user) {
     res.redirect('/urls');
   } else {
@@ -218,7 +221,7 @@ app.get('/login', (req, res) => {
 
 //Post request for urls page
 app.post("/urls", (req, res) => {
-    const user = users[req.cookies.user_id]
+    const user = users[req.session.user_id]
     if (!user) {
         return res.status(401).send('You need to be logged in to create new urls')
     }
@@ -275,6 +278,6 @@ app.post('/register', (req, res) => {
     }
 
     //Set a cookie for the new user's ID
-    res.cookie('user_id', id)
-    res.redirect('/urls')
+    res.cookie('user_id', id);
+    res.redirect('/urls');
 })
