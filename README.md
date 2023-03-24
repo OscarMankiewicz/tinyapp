@@ -16,6 +16,10 @@ Developed By Oscar Mankiewicz
 - EJS
 - bcryptjs
 - cookie-session
+- cookie-parser
+- nodemon
+- mocha
+- chai
 
 ## Getting Started
 
