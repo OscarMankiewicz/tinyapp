@@ -53,7 +53,6 @@ function checkPassword(password, hashedPassword) {
 }
 
 function getUser(req) {
-    console.log("User ID from cookie:", req.session.user_id);
     const userId = req.cookies.user_id;
     return users[userId];
 }
@@ -280,4 +279,4 @@ app.post('/register', (req, res) => {
     //Set a cookie for the new user's ID
     res.cookie('user_id', id);
     res.redirect('/urls');
-})
+});
