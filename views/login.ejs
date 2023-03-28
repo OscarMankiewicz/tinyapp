@@ -18,6 +18,9 @@
       </head>
     <%- include('partials/_header') %>
     <h1>Login</h1>
+    <% if (!user) { %>
+        <h2>Please login to view or change URls</h2>
+    <% } %>
     <form method="POST" action="/login">
       <label>
         Email:
